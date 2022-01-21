@@ -9,6 +9,7 @@ import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
 import android.text.TextWatcher
 import android.text.Editable
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import com.android.volley.Response
@@ -20,42 +21,35 @@ import java.util.HashMap
 
 
 
-class MainActivity : AppCompatActivity() {
-
+class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener{
+    private val TAG = "MainActivity"
     private val API_KEY = "f0ca2743-1300-469b-892d-57bc85a15773"
     // creating variable for recycler view,
     // adapter, array list, progress bar
     private var currencyRV: RecyclerView? = null
     private var searchEdt: EditText? = null
-    private var currencyModalArrayList: ArrayList<CurrencyModal>? = null
+    private lateinit var currencyModalArrayList: ArrayList<CurrencyModal>
     private var currencyRVAdapter: CurrencyRVAdapter? = null
     private var loadingPB: ProgressBar? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         searchEdt = findViewById(R.id.idEdtCurrency)
-        searchEdt!!.setOnClickListener {
-            val bundle = Bundle()
-            val myMessage = "Stack Overflow is cool!"
-            bundle.putString("message", myMessage)
-            val fragInfo = CryptoPage()
-            fragInfo.setArguments(bundle)
-            supportFragmentManager.beginTransaction().replace(R.id.main_activity_layout, fragInfo).commit()
-        }
+
         // initializing all our variables and array list.
         loadingPB = findViewById(R.id.idPBLoading)
         currencyRV = findViewById(R.id.idRVcurrency)
         currencyModalArrayList = ArrayList()
 
         // initializing our adapter class.
-        currencyRVAdapter = CurrencyRVAdapter(currencyModalArrayList, this)
+        currencyRVAdapter = CurrencyRVAdapter(currencyModalArrayList, this, this)
 
         // setting layout manager to recycler view.
         currencyRV!!.setLayoutManager(LinearLayoutManager(this))
 
         // setting adapter to recycler view.
         currencyRV!!.setAdapter(currencyRVAdapter)
-
+        currencyRVAdapter
         // calling get data method to get data from API.
         data
 
@@ -168,4 +162,13 @@ class MainActivity : AppCompatActivity() {
             // json object request to our queue.
             queue.add(jsonObjectRequest)
         }
+
+    override fun onItemClick(position: Int, value: String) {
+        Log.i(TAG, "onItemClick: ${"$position $value"}")
+        val bundle = Bundle()
+        bundle.putString("message", value)
+        val fragInfo = CryptoPage()
+        fragInfo.arguments = bundle
+        supportFragmentManager.beginTransaction().replace(R.id.main_activity_layout, fragInfo).commit()
+    }
 }

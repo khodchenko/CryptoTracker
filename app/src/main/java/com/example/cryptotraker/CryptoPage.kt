@@ -15,7 +15,8 @@ import com.example.cryptotraker.databinding.FragmentCryptoPageBinding
 
 class CryptoPage : Fragment(R.layout.fragment_crypto_page) {
 
-    private val URL = "https://pro.coinlist.co/trader/BTC-USD"
+    private val URL = "https://pro.coinlist.co/trader/"
+    private val CURRENCY = "USD"
     private var _binding : FragmentCryptoPageBinding? = null
     private val binding get() = _binding!!
     private lateinit var webView: WebView
@@ -31,14 +32,14 @@ class CryptoPage : Fragment(R.layout.fragment_crypto_page) {
 
         val myValue = this.requireArguments().getString("message")
 
-        binding.webView.settings.setJavaScriptEnabled(true)
+        binding.webView.settings.javaScriptEnabled = true
         binding.webView.webViewClient = object : WebViewClient(){
             override fun shouldOverrideUrlLoading(view: WebView?, url : String): Boolean {
                 view?.loadUrl(url)
                 return true
             }
         }
-        binding.webView.loadUrl(URL)
+        binding.webView.loadUrl("$URL$myValue-$CURRENCY")
 
         return view
     }
