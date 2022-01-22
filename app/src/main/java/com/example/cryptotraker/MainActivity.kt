@@ -9,26 +9,22 @@ import android.text.Editable
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import com.android.volley.Response
 import com.android.volley.toolbox.Volley
 import com.android.volley.toolbox.JsonObjectRequest
 import com.example.cryptotraker.databinding.ActivityMainBinding
-import com.google.firebase.ktx.Firebase
+import com.google.android.material.navigation.NavigationView
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import com.google.firebase.remoteconfig.ktx.get
-import com.google.firebase.remoteconfig.ktx.remoteConfig
-import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
-import org.json.JSONArray
 import org.json.JSONException
-import org.json.JSONObject
-import java.util.*
+
 import kotlin.collections.ArrayList
-import androidx.annotation.NonNull
-
-import com.google.android.gms.tasks.OnCompleteListener
-
-
-
+import androidx.core.content.ContextCompat
+import java.util.*
+import kotlin.collections.HashMap
 
 
 class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener {
@@ -38,13 +34,74 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
     private lateinit var currencyRVAdapter: CurrencyRVAdapter
     private lateinit var binding: ActivityMainBinding
     private lateinit var remoteConfig: FirebaseRemoteConfig
-    private lateinit var firebaseList : ArrayList<String>
+    private lateinit var firebaseList: ArrayList<String>
+    private lateinit var actionBarToggle: ActionBarDrawerToggle
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var navView: NavigationView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
-        remoteSetup()
+
+        drawerLayout = binding.drawerLayout
+        navView = binding.navView
+        actionBarToggle = ActionBarDrawerToggle(this, drawerLayout, 0, 0)
+        binding.drawerLayout.addDrawerListener(actionBarToggle)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        actionBarToggle.syncState()
+        val menu = navView.menu
+
+        val sharedPreferences = getSharedPreferences("sharedPrefs", MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        val isDarkModeOn = sharedPreferences.getBoolean("isDarkModeOn", false)
+
+        if (isDarkModeOn) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            menu.findItem(R.id.night_mode_item).title = "Disable Dark Mode"
+            menu.findItem(R.id.night_mode_item).icon = (ContextCompat.getDrawable(this, R.drawable.ic_day))
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            menu.findItem(R.id.night_mode_item).title = "Enable Dark Mode"
+            menu.findItem(R.id.night_mode_item).icon = (ContextCompat.getDrawable(this, R.drawable.ic_night))
+        }
+
+        navView.setNavigationItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.night_mode_item -> {
+                    Toast.makeText(this, "Change to Night mode", Toast.LENGTH_SHORT).show()
+
+                    if (isDarkModeOn) {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                        editor.putBoolean("isDarkModeOn", false)
+                        editor.apply()
+
+                        menu.findItem(R.id.night_mode_item).title = "Enable Dark Mode"
+                        menu.findItem(R.id.night_mode_item).icon = (ContextCompat.getDrawable(this, R.drawable.ic_night))
+                        true
+                    } else {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+
+                        editor.putBoolean("isDarkModeOn", true)
+                        editor.apply()
+                        menu.findItem(R.id.night_mode_item).title = "Disable Dark Mode"
+                        menu.findItem(R.id.night_mode_item).icon = (ContextCompat.getDrawable(this, R.drawable.ic_day))
+                        true
+                    }
+                }
+
+                R.id.language_item -> {
+                    Toast.makeText(this, "People", Toast.LENGTH_SHORT).show()
+                    true
+                }
+                else -> {
+                    false
+                }
+            }
+        }
+
+
         currencyModalArrayList = ArrayList()
         binding.idPBLoading.visibility = View.VISIBLE
 
@@ -56,7 +113,7 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
         binding.idRVcurrency.adapter = currencyRVAdapter
         currencyRVAdapter
 
-       // data
+        // data
 
         binding.idEdtCurrency.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
@@ -65,35 +122,22 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
                 filter(s.toString())
             }
         })
-        var list = arrayListOf<String>("BTC","ETH")
-//        remoteConfig = Firebase.remoteConfig
-//        val configSettings = remoteConfigSettings {
-//            minimumFetchIntervalInSeconds = 3600
-//        }
-//        remoteConfig.setConfigSettingsAsync(configSettings)
-//        remoteConfig.fetchAndActivate()
-//            .addOnCompleteListener(this, OnCompleteListener<Boolean?> { task ->
-//                if (task.isSuccessful) {
-//                    firebaseList = remoteConfig.getString("CRYPTO_LIST").split(",") as ArrayList<String>
-//                    val updated = task.result
-//                    Log.d(TAG, "Config params updated: $updated")
-//                    Toast.makeText(
-//                        this@MainActivity, "Fetch and activate succeeded",
-//                        Toast.LENGTH_SHORT
-//                    ).show()
-//                } else {
-//                    Toast.makeText(
-//                        this@MainActivity, "Fetch failed",
-//                        Toast.LENGTH_SHORT
-//                    ).show()
-//                }
-//
-//            })
 
+        var list = arrayListOf<String>("BTC", "ETH")
 
         getFirebaseList(list)
     }
 
+    override fun onItemClick(position: Int, value: String) {
+        Log.i(TAG, "onItemClick: ${"$position $value"}")
+        val bundle = Bundle()
+        bundle.putString("message", value)
+        val fragInfo = CryptoPage()
+        fragInfo.arguments = bundle
+        supportFragmentManager.beginTransaction().replace(R.id.drawer_layout, fragInfo, "fragment")
+            .addToBackStack("fragment")
+            .commit()
+    }
 
     private fun filter(filter: String) {
         val filteredlist = ArrayList<CurrencyModal>()
@@ -101,7 +145,9 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
         for (item in currencyModalArrayList) {
 
 
-            if (item.name.lowercase(Locale.getDefault()).contains(filter.lowercase(Locale.getDefault()))) {
+            if (item.name.lowercase(Locale.getDefault())
+                    .contains(filter.lowercase(Locale.getDefault()))
+            ) {
                 filteredlist.add(item)
             }
         }
@@ -143,18 +189,10 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
                         currencyRVAdapter.notifyDataSetChanged()
                     } catch (e: JSONException) {
                         e.printStackTrace()
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Something went amiss. Please try again later",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        toastMakeText("Something went amiss. Please try again later")
                     }
                 }, Response.ErrorListener {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Something went amiss. Please try again later",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    toastMakeText("Something went amiss. Please try again later")
                 }) {
                     override fun getHeaders(): Map<String, String> {
                         val headers = HashMap<String, String>()
@@ -165,24 +203,19 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
             queue.add(jsonObjectRequest)
         }
 
-    override fun onItemClick(position: Int, value: String) {
-        Log.i(TAG, "onItemClick: ${"$position $value"}")
-        val bundle = Bundle()
-        bundle.putString("message", value)
-        val fragInfo = CryptoPage()
-        fragInfo.arguments = bundle
-        supportFragmentManager.beginTransaction().replace(R.id.main_activity_layout, fragInfo)
-            .commit()
-    }
-
-    private fun remoteSetup() {
-
+    private fun toastMakeText(text: String) {
+        Toast.makeText(
+            this@MainActivity,
+            text,
+            Toast.LENGTH_SHORT
+        ).show()
 
     }
 
-    fun getFirebaseList(list: ArrayList<String>) {
+    private fun getFirebaseList(list: ArrayList<String>) {
         for (i in list) {
-            var url = "https://pro-api.coinmarketcap.com/v1/tools/price-conversion?amount=1&symbol=$i"
+            var url =
+                "https://pro-api.coinmarketcap.com/v1/tools/price-conversion?amount=1&symbol=$i"
             val queue = Volley.newRequestQueue(this)
             val jsonObjectRequest: JsonObjectRequest =
                 @SuppressLint("NotifyDataSetChanged")
@@ -204,18 +237,10 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
                         currencyRVAdapter.notifyDataSetChanged()
                     } catch (e: JSONException) {
                         e.printStackTrace()
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Something went amiss. Please try again later",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        toastMakeText("Something went amiss. Please try again later")
                     }
                 }, Response.ErrorListener {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Something went amiss. Please try again later",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    toastMakeText("Something went amiss. Please try again later")
                 }) {
                     override fun getHeaders(): Map<String, String> {
                         val headers = HashMap<String, String>()
@@ -227,4 +252,16 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
         }
     }
 
+    override fun onSupportNavigateUp(): Boolean {
+        drawerLayout.openDrawer(navView)
+        return true
+    }
+
+    override fun onBackPressed() {
+        if (this.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            this.drawerLayout.closeDrawer(GravityCompat.START)
+        } else {
+            super.onBackPressed()
+        }
+    }
 }
