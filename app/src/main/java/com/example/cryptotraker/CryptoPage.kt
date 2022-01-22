@@ -5,8 +5,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.webkit.WebChromeClient
-import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 
@@ -15,11 +13,9 @@ import com.example.cryptotraker.databinding.FragmentCryptoPageBinding
 
 class CryptoPage : Fragment(R.layout.fragment_crypto_page) {
 
-    private val URL = "https://pro.coinlist.co/trader/"
-    private val CURRENCY = "USD"
+    private val URL = "https://coinmarketcap.com/currencies/"
     private var _binding : FragmentCryptoPageBinding? = null
     private val binding get() = _binding!!
-    private lateinit var webView: WebView
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreateView(
@@ -39,7 +35,7 @@ class CryptoPage : Fragment(R.layout.fragment_crypto_page) {
                 return true
             }
         }
-        binding.webView.loadUrl("$URL$myValue-$CURRENCY")
+        binding.webView.loadUrl("$URL$myValue")
 
         return view
     }
