@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<defaultsMap>
+    <entry>
+        <key>CRYPTO_LIST</key>
+        <value>BTC,ETH,USDT,BNB,USDC,ADA,SOLXRP</value>
+    </entry>
+</defaultsMap>

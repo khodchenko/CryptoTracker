@@ -29,6 +29,22 @@ import androidx.core.content.ContextCompat
 import java.util.*
 import kotlin.collections.HashMap
 import android.os.Build
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
+
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.ktx.remoteConfig
+import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
+import androidx.core.content.PackageManagerCompat.LOG_TAG
+
+import androidx.annotation.NonNull
+import androidx.core.content.PackageManagerCompat
+
+import com.google.android.gms.tasks.OnFailureListener
+
+import com.google.android.gms.tasks.OnSuccessListener
+
+
+
 
 
 class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener {
@@ -45,6 +61,7 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
     private lateinit var context: Context
 
 
+    @SuppressLint("RestrictedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -147,8 +164,6 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
         binding.idRVcurrency.adapter = currencyRVAdapter
         currencyRVAdapter
 
-        //todo
-        //data
 
         binding.idEdtCurrency.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
@@ -158,9 +173,29 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
             }
         })
 
-        var list = arrayListOf<String>("BTC", "ETH")
 
-        getFirebaseList(list)
+
+        remoteConfig = Firebase.remoteConfig
+        val configSettings = remoteConfigSettings {
+            minimumFetchIntervalInSeconds = 10
+        }
+        remoteConfig.setConfigSettingsAsync(configSettings)
+        //remoteConfig.setDefaultsAsync(R.xml.remote_config_params)
+        remoteConfig.fetch()
+            .addOnSuccessListener {
+                Log.d(LOG_TAG, "Remote Config fetch successful")
+                remoteConfig.fetchAndActivate()
+                var list = remoteConfig.getString("CRYPTO_LIST").split(",").toTypedArray()
+                getFirebaseList(list)
+            }
+            .addOnFailureListener { e ->
+                Log.e(
+                    LOG_TAG,
+                    "Remote Config fetch failed: " + e.message
+                )
+                data //loading basic list on failure
+            }
+
     }
 
     override fun onItemClick(position: Int, value: String) {
@@ -247,7 +282,7 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
 
     }
 
-    private fun getFirebaseList(list: ArrayList<String>) {
+    private fun getFirebaseList(list: Array<String>) {
         for (i in list) {
             var url =
                 "https://pro-api.coinmarketcap.com/v1/tools/price-conversion?amount=1&symbol=$i"

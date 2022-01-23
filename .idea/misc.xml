@@ -11,10 +11,11 @@
         <entry key="..\:/AndroidProjects/CryptoTraker/app/src/main/res/layout/fragment_crypto_page.xml" value="0.2364179037174423" />
         <entry key="..\:/AndroidProjects/CryptoTraker/app/src/main/res/layout/nav_header.xml" value="0.1" />
         <entry key="..\:/AndroidProjects/CryptoTraker/app/src/main/res/menu/drawer_list.xml" value="0.20364583333333333" />
+        <entry key="..\:/AndroidProjects/CryptoTraker/app/src/main/res/xml/remote_config_params.xml" value="0.20364583333333333" />
       </map>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_15_PREVIEW" project-jdk-name="15" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_15" project-jdk-name="15" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
   <component name="ProjectType">
