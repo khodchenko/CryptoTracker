@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">CryptoTraker</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="error_loading_message">Что-то пошло не так. Попробуйте еще раз.</string>
+    <string name="no_currency_found">Не найдено валют…</string>
+    <string name="enable_dark_mode">Включить темную тему</string>
+    <string name="disable_dark_mode">Выключить темную тему</string>
+    <string name="search_currency">Поиск валюты</string>
+</resources>

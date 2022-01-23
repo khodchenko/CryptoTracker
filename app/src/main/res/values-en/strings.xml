@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">CryptoTraker</string>
+    <!-- TODO: Remove or change this placeholder text -->
     <string name="error_loading_message">Something went amiss. Please try again later</string>
     <string name="no_currency_found">No currency found…</string>
     <string name="enable_dark_mode">Enable Dark Mode</string>

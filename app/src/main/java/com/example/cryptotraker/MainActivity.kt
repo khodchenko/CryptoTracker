@@ -1,6 +1,9 @@
 package com.example.cryptotraker
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.res.Configuration
+import android.content.res.Resources
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -25,6 +28,7 @@ import kotlin.collections.ArrayList
 import androidx.core.content.ContextCompat
 import java.util.*
 import kotlin.collections.HashMap
+import android.os.Build
 
 
 class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener {
@@ -38,6 +42,8 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
     private lateinit var actionBarToggle: ActionBarDrawerToggle
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var navView: NavigationView
+    private lateinit var context: Context
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,47 +59,75 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
         actionBarToggle.syncState()
         val menu = navView.menu
 
-        val sharedPreferences = getSharedPreferences("sharedPrefs", MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        val isDarkModeOn = sharedPreferences.getBoolean("isDarkModeOn", false)
+        val sharedPreferencesTheme = getSharedPreferences("sharedPrefs", MODE_PRIVATE)
+        val editorTheme = sharedPreferencesTheme.edit()
 
+        val sharedPreferencesLocalization = getSharedPreferences("sharedPrefs", MODE_PRIVATE)
+        val editorLocalization = sharedPreferencesLocalization.edit()
+
+        //val isEnglish = Locale.getDefault().language.equals("en")
+        val isEnglish = sharedPreferencesLocalization.getBoolean("isEnglish", true)
+        if (isEnglish){
+            updateResources(this,"en")
+            menu.findItem(R.id.language_item).title = "РУССКИЙ"
+        }else{
+            updateResources(this,"ru")
+            menu.findItem(R.id.language_item).title = "ENGLISH"
+        }
+
+        val isDarkModeOn = sharedPreferencesTheme.getBoolean("isDarkModeOn", false)
         if (isDarkModeOn) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-            menu.findItem(R.id.night_mode_item).title = "Disable Dark Mode"
+            menu.findItem(R.id.night_mode_item).title = getString(R.string.disable_dark_mode)
             menu.findItem(R.id.night_mode_item).icon = (ContextCompat.getDrawable(this, R.drawable.ic_day))
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            menu.findItem(R.id.night_mode_item).title = "Enable Dark Mode"
+            menu.findItem(R.id.night_mode_item).title = getString(R.string.enable_dark_mode)
             menu.findItem(R.id.night_mode_item).icon = (ContextCompat.getDrawable(this, R.drawable.ic_night))
         }
 
         navView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.night_mode_item -> {
-                    Toast.makeText(this, "Change to Night mode", Toast.LENGTH_SHORT).show()
+
+                    Log.i(TAG, "onCreate: Change Night mode")
 
                     if (isDarkModeOn) {
                         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                        editor.putBoolean("isDarkModeOn", false)
-                        editor.apply()
-
-                        menu.findItem(R.id.night_mode_item).title = "Enable Dark Mode"
+                        editorTheme.putBoolean("isDarkModeOn", false)
+                        editorTheme.apply()
+                        menu.findItem(R.id.night_mode_item).title = getString(R.string.enable_dark_mode)
                         menu.findItem(R.id.night_mode_item).icon = (ContextCompat.getDrawable(this, R.drawable.ic_night))
+                        recreate()
                         true
                     } else {
                         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-
-                        editor.putBoolean("isDarkModeOn", true)
-                        editor.apply()
-                        menu.findItem(R.id.night_mode_item).title = "Disable Dark Mode"
+                        editorTheme.putBoolean("isDarkModeOn", true)
+                        editorTheme.apply()
+                        menu.findItem(R.id.night_mode_item).title = getString(R.string.disable_dark_mode)
                         menu.findItem(R.id.night_mode_item).icon = (ContextCompat.getDrawable(this, R.drawable.ic_day))
+                        recreate()
                         true
                     }
                 }
 
                 R.id.language_item -> {
-                    Toast.makeText(this, "People", Toast.LENGTH_SHORT).show()
-                    true
+                    //Toast.makeText(this, "Language set", Toast.LENGTH_SHORT).show()
+                    if(isEnglish){
+                        editorLocalization.putBoolean("isEnglish", false)
+                        editorLocalization.apply()
+                        updateResources(this,"ru")
+                        menu.findItem(R.id.language_item).title = "РУССКИЙ"
+                        recreate()
+                        true
+                    } else {
+                        editorLocalization.putBoolean("isEnglish", true)
+                        editorLocalization.apply()
+                        updateResources(this,"en")
+                        menu.findItem(R.id.language_item).title = "ENGLISH"
+                        recreate()
+                        true
+                    }
                 }
                 else -> {
                     false
@@ -113,7 +147,8 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
         binding.idRVcurrency.adapter = currencyRVAdapter
         currencyRVAdapter
 
-        // data
+        //todo
+        //data
 
         binding.idEdtCurrency.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
@@ -152,7 +187,7 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
             }
         }
         if (filteredlist.isEmpty()) {
-            Toast.makeText(this, "No currency found..", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.no_currency_found), Toast.LENGTH_SHORT).show()
         } else {
             currencyRVAdapter.filterList(filteredlist)
         }
@@ -189,10 +224,10 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
                         currencyRVAdapter.notifyDataSetChanged()
                     } catch (e: JSONException) {
                         e.printStackTrace()
-                        toastMakeText("Something went amiss. Please try again later")
+                        toastMakeText(getString(R.string.error_loading_message))
                     }
                 }, Response.ErrorListener {
-                    toastMakeText("Something went amiss. Please try again later")
+                    toastMakeText(getString(R.string.error_loading_message))
                 }) {
                     override fun getHeaders(): Map<String, String> {
                         val headers = HashMap<String, String>()
@@ -237,10 +272,10 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
                         currencyRVAdapter.notifyDataSetChanged()
                     } catch (e: JSONException) {
                         e.printStackTrace()
-                        toastMakeText("Something went amiss. Please try again later")
+                        toastMakeText(getString(R.string.error_loading_message))
                     }
                 }, Response.ErrorListener {
-                    toastMakeText("Something went amiss. Please try again later")
+                    toastMakeText(getString(R.string.error_loading_message))
                 }) {
                     override fun getHeaders(): Map<String, String> {
                         val headers = HashMap<String, String>()
@@ -264,4 +299,20 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
             super.onBackPressed()
         }
     }
+
+    private fun updateResources(context: Context, language: String) {
+        val locale = Locale(language)
+        Locale.setDefault(locale)
+        val resources: Resources = context.resources
+        val configuration: Configuration = resources.configuration
+
+        //not necessary for my api
+        configuration.locale = locale
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            configuration.setLayoutDirection(locale)
+        }
+        resources.updateConfiguration(configuration, resources.displayMetrics)
+    }
+
+
 }
