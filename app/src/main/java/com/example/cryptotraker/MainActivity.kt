@@ -36,6 +36,7 @@ import androidx.core.content.PackageManagerCompat.LOG_TAG
 
 
 class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener {
+
     private val TAG = "MainActivity"
     private val API_KEY = "f0ca2743-1300-469b-892d-57bc85a15773"
     private lateinit var currencyModalArrayList: ArrayList<CurrencyModal>
