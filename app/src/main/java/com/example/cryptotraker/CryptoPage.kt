@@ -18,7 +18,7 @@ import com.example.cryptotraker.databinding.FragmentCryptoPageBinding
 class CryptoPage : Fragment(R.layout.fragment_crypto_page) {
 
     private val URL = "https://coinmarketcap.com/currencies/"
-    val HEADERS : Map<String, String> = mapOf("User-Agent" to
+    private val HEADERS : Map<String, String> = mapOf("User-Agent" to
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0")
     private var _binding : FragmentCryptoPageBinding? = null
     private val binding get() = _binding!!
@@ -28,7 +28,7 @@ class CryptoPage : Fragment(R.layout.fragment_crypto_page) {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentCryptoPageBinding.inflate(inflater, container, false)
         val view = binding.root
 

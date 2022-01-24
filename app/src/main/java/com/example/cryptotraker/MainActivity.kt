@@ -23,27 +23,15 @@ import com.example.cryptotraker.databinding.ActivityMainBinding
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import org.json.JSONException
-
 import kotlin.collections.ArrayList
 import androidx.core.content.ContextCompat
 import java.util.*
 import kotlin.collections.HashMap
 import android.os.Build
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
-
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import androidx.core.content.PackageManagerCompat.LOG_TAG
-
-import androidx.annotation.NonNull
-import androidx.core.content.PackageManagerCompat
-
-import com.google.android.gms.tasks.OnFailureListener
-
-import com.google.android.gms.tasks.OnSuccessListener
-
-
 
 
 
@@ -54,11 +42,9 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
     private lateinit var currencyRVAdapter: CurrencyRVAdapter
     private lateinit var binding: ActivityMainBinding
     private lateinit var remoteConfig: FirebaseRemoteConfig
-    private lateinit var firebaseList: ArrayList<String>
     private lateinit var actionBarToggle: ActionBarDrawerToggle
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var navView: NavigationView
-    private lateinit var context: Context
 
 
     @SuppressLint("RestrictedApi")
@@ -82,7 +68,7 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
         val sharedPreferencesLocalization = getSharedPreferences("sharedPrefs", MODE_PRIVATE)
         val editorLocalization = sharedPreferencesLocalization.edit()
 
-        //val isEnglish = Locale.getDefault().language.equals("en")
+
         val isEnglish = sharedPreferencesLocalization.getBoolean("isEnglish", true)
         if (isEnglish){
             updateResources(this,"en")
@@ -129,7 +115,7 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
                 }
 
                 R.id.language_item -> {
-                    //Toast.makeText(this, "Language set", Toast.LENGTH_SHORT).show()
+
                     if(isEnglish){
                         editorLocalization.putBoolean("isEnglish", false)
                         editorLocalization.apply()
@@ -173,8 +159,6 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
             }
         })
 
-
-
         remoteConfig = Firebase.remoteConfig
         val configSettings = remoteConfigSettings {
             minimumFetchIntervalInSeconds = 10
@@ -185,14 +169,12 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
             .addOnSuccessListener {
                 Log.d(LOG_TAG, "Remote Config fetch successful")
                 remoteConfig.fetchAndActivate()
-                var list = remoteConfig.getString("CRYPTO_LIST").split(",").toTypedArray()
+                val list = remoteConfig.getString("CRYPTO_LIST").split(",").toTypedArray()
                 getFirebaseList(list)
             }
             .addOnFailureListener { e ->
-                Log.e(
-                    LOG_TAG,
-                    "Remote Config fetch failed: " + e.message
-                )
+                Log.e(LOG_TAG, "Remote Config fetch failed: " + e.message)
+
                 data //loading basic list on failure
             }
 
@@ -210,28 +192,27 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
     }
 
     private fun filter(filter: String) {
-        val filteredlist = ArrayList<CurrencyModal>()
+        val filteredList = ArrayList<CurrencyModal>()
 
         for (item in currencyModalArrayList) {
-
 
             if (item.name.lowercase(Locale.getDefault())
                     .contains(filter.lowercase(Locale.getDefault()))
             ) {
-                filteredlist.add(item)
+                filteredList.add(item)
             }
         }
-        if (filteredlist.isEmpty()) {
-            Toast.makeText(this, getString(R.string.no_currency_found), Toast.LENGTH_SHORT).show()
+        if (filteredList.isEmpty()) {
+           // toastMakeText(getString(R.string.no_currency_found))
         } else {
-            currencyRVAdapter.filterList(filteredlist)
+            currencyRVAdapter.filterList(filteredList)
         }
     }
 
     val data: Unit
         get() {
 
-            var url =
+            val url =
                 "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=100"
 
             val queue = Volley.newRequestQueue(this)
@@ -259,7 +240,7 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
                         currencyRVAdapter.notifyDataSetChanged()
                     } catch (e: JSONException) {
                         e.printStackTrace()
-                        toastMakeText(getString(R.string.error_loading_message))
+                      //  toastMakeText(getString(R.string.error_loading_message))
                     }
                 }, Response.ErrorListener {
                     toastMakeText(getString(R.string.error_loading_message))
@@ -284,7 +265,7 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
 
     private fun getFirebaseList(list: Array<String>) {
         for (i in list) {
-            var url =
+            val url =
                 "https://pro-api.coinmarketcap.com/v1/tools/price-conversion?amount=1&symbol=$i"
             val queue = Volley.newRequestQueue(this)
             val jsonObjectRequest: JsonObjectRequest =
@@ -307,10 +288,12 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
                         currencyRVAdapter.notifyDataSetChanged()
                     } catch (e: JSONException) {
                         e.printStackTrace()
-                        toastMakeText(getString(R.string.error_loading_message))
+                       toastMakeText(getString(R.string.error_loading_message))
                     }
                 }, Response.ErrorListener {
-                    toastMakeText(getString(R.string.error_loading_message))
+                    Log.e(TAG, "getFirebaseList: error occurred", )
+                    //toastMakeText(getString(R.string.error_loading_message))
+                    //todo fix error message
                 }) {
                     override fun getHeaders(): Map<String, String> {
                         val headers = HashMap<String, String>()
@@ -341,7 +324,7 @@ class MainActivity : AppCompatActivity(), CurrencyRVAdapter.OnItemClickListener 
         val resources: Resources = context.resources
         val configuration: Configuration = resources.configuration
 
-        //not necessary for my api
+        //api level 17 android 4.2
         configuration.locale = locale
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             configuration.setLayoutDirection(locale)
